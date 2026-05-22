@@ -20,23 +20,34 @@
 		class="pointer-events-none absolute -right-[20px] bottom-0 h-[20px] w-[20px] transition-all duration-300"
 		style="background: radial-gradient(circle at 100% 0%, transparent 20px, var(--md-sys-color-surface-container-low) 20.5px);"
 	></div>
-	<div
-		class="flex h-16 items-center pt-3"
-		class:justify-end={sidebar.isOpen}
-		class:justify-center={!sidebar.isOpen}
-	>
+	<div class="flex h-16 items-center justify-end pt-3">
 		<button
 			onclick={() => sidebar.toggle()}
-			class="mr-2 cursor-pointer rounded-full p-2 transition-colors hover:bg-black/5 dark:hover:bg-white/5"
+			class="cursor-pointer rounded-full p-2 transition-all duration-300 ease-in-out hover:bg-black/5 dark:hover:bg-white/5"
 			style="color: var(--md-sys-color-on-surface-variant);"
 			class:mr-2={sidebar.isOpen}
-			class:mr-0={!sidebar.isOpen}
+			class:mr-5={!sidebar.isOpen}
 		>
-			{#if sidebar.isOpen}
-				<span class="material-symbols-outlined">chevron_left</span>
-			{:else}
-				<span class="material-symbols-outlined">chevron_right</span>
-			{/if}
+			<div class="relative flex h-6 w-6 items-center justify-center">
+				<span
+					class="material-symbols-outlined absolute transition-all duration-200"
+					class:opacity-0={sidebar.isOpen}
+					class:scale-50={sidebar.isOpen}
+					class:opacity-100={!sidebar.isOpen}
+					class:scale-100={!sidebar.isOpen}
+				>
+					menu
+				</span>
+				<span
+					class="material-symbols-outlined absolute transition-all duration-200"
+					class:opacity-100={sidebar.isOpen}
+					class:scale-100={sidebar.isOpen}
+					class:opacity-0={!sidebar.isOpen}
+					class:scale-50={!sidebar.isOpen}
+				>
+					menu_open
+				</span>
+			</div>
 		</button>
 	</div>
 
