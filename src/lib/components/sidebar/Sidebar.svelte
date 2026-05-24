@@ -5,7 +5,7 @@
 
 	let { children } = $props();
 
-	let widthClass = $derived(sidebar.isOpen ? 'w-64' : 'w-20');
+	let widthClass = $derived(sidebar.isOpen ? 'w-64' : 'w-0 md:w-20');
 
 	let menuOpen = $state(false);
 	let containerEl = $state();
@@ -111,7 +111,6 @@
 		<button
 			onclick={() => menuOpen = !menuOpen}
 			class="flex items-center w-full rounded-xl transition-all duration-200 p-2 cursor-pointer text-left select-none relative group"
-			class:justify-center={!sidebar.isOpen}
 			style="
 				background-color: {menuOpen ? 'var(--md-sys-color-surface-container-high)' : 'transparent'};
 				color: var(--md-sys-color-on-surface-variant);
