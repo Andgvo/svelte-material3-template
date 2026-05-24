@@ -3,7 +3,7 @@
 	import favicon from '$lib/assets/favicon.svg';
 
 	import Sidebar from '$lib/components/sidebar/Sidebar.svelte';
-    import SidebarItem from '$lib/components/sidebar/SidebarItem.svelte';
+	import SidebarItem from '$lib/components/sidebar/SidebarItem.svelte';
 
 	let { children } = $props();
 </script>
