@@ -16,7 +16,7 @@
 		<SidebarItem href="/cards" icon="group" title="Cards" />
 	</Sidebar>
 
-	<main class="p-8 flex-1">
+	<main class="p-8 flex-1 mt-16 md:mt-0">
 		{@render children()}
 	</main>
 </div>
