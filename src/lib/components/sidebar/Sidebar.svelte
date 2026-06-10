@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
 	import { sidebar } from './state.svelte.js';
 	import { settings } from '$lib/state/settings.svelte.js';
 	import { onMount } from 'svelte';
@@ -8,9 +8,6 @@
 
 	// Ancho estático que tendrá el panel en modo escritorio
 	let desktopWidthClass = $derived(sidebar.isOpen ? 'w-64' : 'w-20');
-
-	// Ajuste automático de márgenes para el contenido de la aplicación
-	let mainContentClass = $derived(isMobile ? 'pt-16' : sidebar.isOpen ? 'md:pl-64' : 'md:pl-20');
 
 	let menuOpen = $state(false);
 	let containerEl = $state();
@@ -24,6 +21,19 @@
 	let transitionTimer = $state(/** @type {ReturnType<typeof setTimeout> | null} */ (null));
 	let isTransitioning = $derived(layoutState === 'to-mobile' || layoutState === 'to-desktop');
 
+	// ── Control de Esquinas Redondeadas ───────────────────────────────────
+	// Esta variable determina si las esquinas deben ser visibles o no.
+	let showCorners = $derived(!sidebar.isOpen && layoutState === 'desktop' && !isTransitioning);
+
+	// Ajuste automático de márgenes para el contenido de la aplicación
+	let mainContentClass = $derived(
+		layoutState === 'desktop' || layoutState === 'to-desktop'
+			? sidebar.isOpen
+				? 'md:pl-64'
+				: 'md:pl-20'
+			: 'pt-16'
+	);
+
 	function handleBreakpointChange(isDesktop) {
 		if (transitionTimer) clearTimeout(transitionTimer);
 		transitionSidebarWidth = sidebar.isOpen ? '256px' : '80px';
@@ -33,13 +43,13 @@
 			transitionTimer = setTimeout(() => {
 				isMobile = true;
 				layoutState = 'mobile';
-			}, 500); // Sincronizado exactamente con los 0.5s de la animación CSS
+			}, 400); // Sincronizado a 400ms
 		} else {
 			layoutState = 'to-desktop';
 			transitionTimer = setTimeout(() => {
 				isMobile = false;
 				layoutState = 'desktop';
-			}, 500);
+			}, 400); // Sincronizado a 400ms
 		}
 	}
 	// ─────────────────────────────────────────────────────────────────────
@@ -102,23 +112,35 @@
 	style="background-color: var(--md-sys-color-surface-container-low); color: var(--md-sys-color-on-surface-variant); --morph-w: {transitionSidebarWidth};"
 >
 	<div
+		class="pointer-events-none absolute top-0 left-full h-[20px] overflow-hidden transition-[width] duration-150 ease-out"
+		style="
+			width: {showCorners ? '20px' : '0px'};
+			transition-delay: {showCorners ? '300ms' : '0ms'};
+		"
+	>
+		<div
+			class="h-[20px] w-[20px]"
+			style="background: radial-gradient(circle at 100% 100%, transparent 20px, var(--md-sys-color-surface-container-low) 20.5px);"
+		></div>
+	</div>
+
+	<div
+		class="pointer-events-none absolute bottom-0 left-full h-[20px] overflow-hidden transition-[width] duration-150 ease-out"
+		style="
+			width: {showCorners ? '20px' : '0px'};
+			transition-delay: {showCorners ? '300ms' : '0ms'};
+		"
+	>
+		<div
+			class="h-[20px] w-[20px]"
+			style="background: radial-gradient(circle at 100% 0%, transparent 20px, var(--md-sys-color-surface-container-low) 20.5px);"
+		></div>
+	</div>
+
+	<div
 		class="flex h-full w-full flex-col transition-opacity duration-300"
 		class:opacity-0={layoutState !== 'desktop'}
 	>
-		<div
-			class="pointer-events-none absolute top-0 -right-[20px] h-[20px] w-[20px] transition-all duration-300"
-			class:opacity-0={sidebar.isOpen}
-			class:opacity-100={!sidebar.isOpen}
-			style="background: radial-gradient(circle at 100% 100%, transparent 20px, var(--md-sys-color-surface-container-low) 20.5px);"
-		></div>
-
-		<div
-			class="pointer-events-none absolute -right-[20px] bottom-0 h-[20px] w-[20px] transition-all duration-300"
-			class:opacity-0={sidebar.isOpen}
-			class:opacity-100={!sidebar.isOpen}
-			style="background: radial-gradient(circle at 100% 0%, transparent 20px, var(--md-sys-color-surface-container-low) 20.5px);"
-		></div>
-
 		<div
 			class="pointer-events-none absolute top-0 right-0 bottom-0 w-[2px] bg-[var(--md-sys-color-surface-container-low)] transition-all duration-300"
 			class:opacity-0={!sidebar.isOpen}
@@ -272,12 +294,13 @@
 <style>
 	/* ─────────────────────────────────────────────────────────────────
 	   ANIMACIONES DE ALTO (Aplicadas directamente al <aside> vertical)
+	   Sincronizadas a 0.4s
 	   ───────────────────────────────────────────────────────────────── */
 	.animate-aside-to-mobile {
-		animation: asideToMobile 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+		animation: asideToMobile 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
 	}
 	.animate-aside-to-desktop {
-		animation: asideToDesktop 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+		animation: asideToDesktop 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
 	}
 
 	@keyframes asideToMobile {
@@ -299,12 +322,13 @@
 
 	/* ─────────────────────────────────────────────────────────────────
 	   ANIMACIONES DE ANCHO (Aplicadas directamente a la barra mobile)
+	   Sincronizadas a 0.4s
 	   ───────────────────────────────────────────────────────────────── */
 	.animate-topbar-to-mobile {
-		animation: topbarToMobile 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+		animation: topbarToMobile 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
 	}
 	.animate-topbar-to-desktop {
-		animation: topbarToDesktop 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+		animation: topbarToDesktop 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
 	}
 
 	@keyframes topbarToMobile {
