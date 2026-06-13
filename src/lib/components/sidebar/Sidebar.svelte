@@ -6,6 +6,9 @@
 	// Svelte 5: 'children' para los enlaces y 'mainContent' para la vista activa
 	let { children, mainContent } = $props();
 
+	// Ancho estático que tendrá el panel en modo escritorio
+	let desktopWidthClass = $derived(sidebar.isOpen ? 'w-64' : 'w-20');
+
 	let menuOpen = $state(false);
 	let containerEl = $state();
 	let currentLang = $state('Español');
@@ -18,12 +21,8 @@
 	let transitionTimer = $state(/** @type {ReturnType<typeof setTimeout> | null} */ (null));
 	let isTransitioning = $derived(layoutState === 'to-mobile' || layoutState === 'to-desktop');
 
-	// ── Control de Ancho (NUEVO: Se adapta a w-full en Móvil) ──────────────
-	let sidebarWidthClass = $derived(
-		isMobile ? (sidebar.isOpen ? 'w-full' : 'w-0') : sidebar.isOpen ? 'w-64' : 'w-20'
-	);
-
 	// ── Control de Esquinas Redondeadas ───────────────────────────────────
+	// Esta variable determina si las esquinas deben ser visibles o no.
 	let showCorners = $derived(!sidebar.isOpen && layoutState === 'desktop' && !isTransitioning);
 
 	// Ajuste automático de márgenes para el contenido de la aplicación
@@ -37,25 +36,20 @@
 
 	function handleBreakpointChange(isDesktop) {
 		if (transitionTimer) clearTimeout(transitionTimer);
-
-		// Auto-cierra el sidebar al redimensionar la ventana para garantizar
-		// que las animaciones de morphing siempre se ejecuten limpiamente.
-		if (sidebar.isOpen) sidebar.toggle();
-
-		transitionSidebarWidth = '80px';
+		transitionSidebarWidth = sidebar.isOpen ? '256px' : '80px';
 
 		if (!isDesktop) {
 			layoutState = 'to-mobile';
 			transitionTimer = setTimeout(() => {
 				isMobile = true;
 				layoutState = 'mobile';
-			}, 400);
+			}, 400); // Sincronizado a 400ms
 		} else {
 			layoutState = 'to-desktop';
 			transitionTimer = setTimeout(() => {
 				isMobile = false;
 				layoutState = 'desktop';
-			}, 400);
+			}, 400); // Sincronizado a 400ms
 		}
 	}
 	// ─────────────────────────────────────────────────────────────────────
@@ -99,35 +93,29 @@
 	});
 </script>
 
-<div
-	class="fixed top-0 left-0 z-50 flex h-16 w-20 items-center justify-center transition-transform duration-300 ease-in-out"
-	class:translate-x-[calc(100vw-5rem)]={isMobile && sidebar.isOpen}
->
+<div class="fixed top-0 left-0 z-50 flex h-16 w-20 items-center justify-center">
 	<button
 		onclick={() => sidebar.toggle()}
 		class="cursor-pointer rounded-full p-2 transition-all duration-300 ease-in-out hover:bg-black/5 dark:hover:bg-white/5"
 		style="color: var(--md-sys-color-on-surface-variant);"
 		aria-label="Toggle Sidebar"
 	>
-		<span class="material-symbols-outlined flex items-center justify-center">
-			{isMobile && sidebar.isOpen ? 'close' : 'menu'}
-		</span>
+		<span class="material-symbols-outlined flex items-center justify-center"> menu </span>
 	</button>
 </div>
 
 <aside
-	class="fixed top-0 left-0 z-40 flex h-screen flex-col transition-all duration-300 ease-in-out {sidebarWidthClass}"
-	class:overflow-hidden={layoutState !== 'desktop' || isTransitioning}
-	class:pointer-events-none={isMobile && !sidebar.isOpen}
+	class="fixed top-0 left-0 z-40 h-screen flex-col transition-all duration-300 ease-in-out
+	{layoutState === 'desktop' || isTransitioning ? 'flex' : 'hidden'} {desktopWidthClass}"
 	class:animate-aside-to-mobile={layoutState === 'to-mobile'}
 	class:animate-aside-to-desktop={layoutState === 'to-desktop'}
 	style="background-color: var(--md-sys-color-surface-container-low); color: var(--md-sys-color-on-surface-variant); --morph-w: {transitionSidebarWidth};"
 >
 	<div
 		class="pointer-events-none absolute top-0 left-full h-[20px] overflow-hidden transition-[width] duration-150 ease-out"
-		style="width: {showCorners ? '20px' : '0px'}; transition-delay: {showCorners
-			? '300ms'
-			: '0ms'};"
+		style="
+			width: {showCorners ? '20px' : '0px'};
+		"
 	>
 		<div
 			class="h-[20px] w-[20px]"
@@ -137,9 +125,9 @@
 
 	<div
 		class="pointer-events-none absolute bottom-0 left-full h-[20px] overflow-hidden transition-[width] duration-150 ease-out"
-		style="width: {showCorners ? '20px' : '0px'}; transition-delay: {showCorners
-			? '300ms'
-			: '0ms'};"
+		style="
+			width: {showCorners ? '20px' : '0px'};
+		"
 	>
 		<div
 			class="h-[20px] w-[20px]"
@@ -149,7 +137,7 @@
 
 	<div
 		class="flex h-full w-full flex-col transition-opacity duration-300"
-		class:opacity-0={isTransitioning || (isMobile && !sidebar.isOpen)}
+		class:opacity-0={layoutState !== 'desktop'}
 	>
 		<div
 			class="pointer-events-none absolute top-0 right-0 bottom-0 w-[2px] bg-[var(--md-sys-color-surface-container-low)] transition-all duration-300"
@@ -279,10 +267,9 @@
 </aside>
 
 <div
-	class="fixed top-0 left-0 z-40 h-16 items-center gap-2 pr-4 pl-20 transition-transform duration-300 ease-in-out
+	class="fixed top-0 left-0 z-40 h-16 items-center gap-2 pr-4 pl-20
 	{layoutState === 'mobile' || isTransitioning ? 'flex' : 'hidden'}
 	{layoutState === 'mobile' ? 'w-full' : ''}"
-	class:translate-x-full={isMobile && sidebar.isOpen}
 	class:animate-topbar-to-mobile={layoutState === 'to-mobile'}
 	class:animate-topbar-to-desktop={layoutState === 'to-desktop'}
 	style="background-color: var(--md-sys-color-surface-container-low); color: var(--md-sys-color-on-surface-variant); --morph-w: {transitionSidebarWidth};"
@@ -304,19 +291,14 @@
 
 <style>
 	/* ─────────────────────────────────────────────────────────────────
-	   ANIMACIONES DE ALTO Y ANCHO (Morph Transitions)
+	   ANIMACIONES DE ALTO (Aplicadas directamente al <aside> vertical)
+	   Sincronizadas a 0.4s
 	   ───────────────────────────────────────────────────────────────── */
 	.animate-aside-to-mobile {
 		animation: asideToMobile 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
 	}
 	.animate-aside-to-desktop {
 		animation: asideToDesktop 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
-	}
-	.animate-topbar-to-mobile {
-		animation: topbarToMobile 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
-	}
-	.animate-topbar-to-desktop {
-		animation: topbarToDesktop 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
 	}
 
 	@keyframes asideToMobile {
@@ -335,6 +317,18 @@
 			height: 100vh;
 		}
 	}
+
+	/* ─────────────────────────────────────────────────────────────────
+	   ANIMACIONES DE ANCHO (Aplicadas directamente a la barra mobile)
+	   Sincronizadas a 0.4s
+	   ───────────────────────────────────────────────────────────────── */
+	.animate-topbar-to-mobile {
+		animation: topbarToMobile 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+	}
+	.animate-topbar-to-desktop {
+		animation: topbarToDesktop 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+	}
+
 	@keyframes topbarToMobile {
 		from {
 			width: var(--morph-w);
